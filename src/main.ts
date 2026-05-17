@@ -144,7 +144,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('OpenWA API')
     .setDescription('Open Source WhatsApp API Gateway - Free, Self-Hosted HTTP API')
-    .setVersion('0.1.0')
+    .setVersion('0.1.6')
     .addApiKey({ type: 'apiKey', name: 'X-API-Key', in: 'header' }, 'X-API-Key')
     .addTag('sessions', 'WhatsApp session management')
     .addTag('messages', 'Send and manage messages')
