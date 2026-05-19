@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Send, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { messageApi } from '../services/api';
@@ -32,6 +32,15 @@ export function MessageTester() {
   const [mediaUrl, setMediaUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<ApiResponse | null>(null);
+  // Flag to track if component is still mounted
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    // Cleanup: component will unmount
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const { data: groups = [], isLoading: loadingGroups } = useSessionGroupsQuery(
     session,
@@ -56,7 +65,8 @@ export function MessageTester() {
   const handleSend = async () => {
     const targetId = recipientType === 'group' ? selectedGroup : recipient;
     if (!session || !targetId) return;
-    setIsLoading(true);
+    // Only set loading state if component is still mounted
+    if (isMounted.current) setIsLoading(true);
     setResponse(null);
 
     const chatId = recipientType === 'group' ? targetId : targetId.replace(/[^0-9]/g, '') + '@c.us';
@@ -87,7 +97,8 @@ export function MessageTester() {
         error: err instanceof Error ? err.message : t('messageTester.sendFailed'),
       });
     } finally {
-      setIsLoading(false);
+      // Only update loading state if component is still mounted
+      if (isMounted.current) setIsLoading(false);
     }
   };
 

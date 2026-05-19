@@ -17,6 +17,7 @@ const ApiKeys = lazy(() => import('./pages/ApiKeys').then(m => ({ default: m.Api
 const MessageTester = lazy(() => import('./pages/MessageTester').then(m => ({ default: m.MessageTester })));
 const Infrastructure = lazy(() => import('./pages/Infrastructure').then(m => ({ default: m.Infrastructure })));
 const Plugins = lazy(() => import('./pages/Plugins'));
+const ChatbotConfig = lazy(() => import('./pages/ChatbotConfig').then(m => ({ default: m.ChatbotConfig })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,6 +65,30 @@ function AppContent() {
     sessionStorage.removeItem('openwa_api_key');
   };
 
+  // Silent auto-login with dev-admin-key on mount
+  useEffect(() => {
+    if (!savedKey) {
+      const attemptAutoLogin = async () => {
+        try {
+          const response = await fetch('/api/auth/validate', {
+            method: 'POST',
+            headers: { 'X-API-Key': 'dev-admin-key' },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setApiKey('dev-admin-key');
+            sessionStorage.setItem('openwa_api_key', 'dev-admin-key');
+            setRole(data.role as UserRole);
+            setIsAuthenticated(true);
+          }
+        } catch {
+          // Silently ignore
+        }
+      };
+      void attemptAutoLogin();
+    }
+  }, [savedKey, setRole]);
+
   // Re-validate and get role on mount if already authenticated
   useEffect(() => {
     if (!savedKey) return;
@@ -102,6 +127,7 @@ function AppContent() {
             <Route index element={<Dashboard />} />
             <Route path="sessions" element={<Sessions />} />
             <Route path="webhooks" element={<Webhooks />} />
+            <Route path="chatbot" element={<ChatbotConfig />} />
             {role === 'admin' && <Route path="api-keys" element={<ApiKeys />} />}
             <Route path="logs" element={<Logs />} />
             <Route path="message-tester" element={<MessageTester />} />

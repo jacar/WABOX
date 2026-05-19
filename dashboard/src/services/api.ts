@@ -152,7 +152,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const apiKey = sessionStorage.getItem('openwa_api_key');
 
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
+    ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
     ...(apiKey ? { 'X-API-Key': apiKey } : {}),
     ...options.headers,
   };
@@ -390,4 +390,44 @@ export const pluginsApi = {
   healthCheck: (id: string) => request<{ healthy: boolean; message?: string }>(`/plugins/${id}/health`),
   getEngines: () => request<Engine[]>('/infra/engines'),
   getCurrentEngine: () => request<{ engineType: string }>('/infra/engines/current'),
+};
+
+// =============================================================================
+// Chatbot Restaurant API
+// =============================================================================
+
+export interface MenuItem {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+}
+
+export interface MenuCategory {
+  category: string;
+  items: MenuItem[];
+}
+
+export interface RestaurantConfig {
+  name: string;
+  catalogUrl: string;
+  address: string;
+  mapsUrl: string;
+  hours: string;
+  phone: string;
+  menu: MenuCategory[];
+}
+
+export const chatbotApi = {
+  getConfig: () => request<RestaurantConfig>('/chatbot/config'),
+  updateConfig: (config: RestaurantConfig) =>
+    request<{ success: boolean; data: RestaurantConfig }>('/chatbot/config', {
+      method: 'PUT',
+      body: JSON.stringify(config),
+    }),
+  uploadImage: (formData: FormData) =>
+    request<{ imageUrl: string }>('/chatbot/upload', {
+      method: 'POST',
+      body: formData,
+    }),
 };
